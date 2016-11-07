@@ -63,7 +63,7 @@ module Scan
       def pipe
         # During building we just show the output in the terminal
         # Check out the ReportCollector class for more xcpretty things
-        pipe = ["| tee '#{xcodebuild_log_path}'"]
+        pipe = ["| sudo tee '#{xcodebuild_log_path}'"]
 
         if Scan.config[:output_style] == 'raw'
           return pipe
