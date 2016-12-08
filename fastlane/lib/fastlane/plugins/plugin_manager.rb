@@ -22,8 +22,8 @@ module Fastlane
     end
 
     def pluginfile_path
-      if FastlaneFolder.path
-        return File.join(FastlaneFolder.path, PLUGINFILE_NAME)
+      if FastlaneCore::FastlaneFolder.path
+        return File.join(FastlaneCore::FastlaneFolder.path, PLUGINFILE_NAME)
       else
         return nil
       end
@@ -233,8 +233,8 @@ module Fastlane
 
     # The code required to load the Plugins file
     def self.code_to_attach
-      if FastlaneFolder.path
-        fastlane_folder_name = File.basename(FastlaneFolder.path)
+      if FastlaneCore::FastlaneFolder.path
+        fastlane_folder_name = File.basename(FastlaneCore::FastlaneFolder.path)
       else
         fastlane_folder_name = "fastlane"
       end
@@ -273,7 +273,8 @@ module Fastlane
           # any actions were overwritten
           self.loaded_fastlane_actions.concat(Fastlane::Actions.constants)
 
-          require gem_name.tr("-", "/") # from "fastlane-plugin-xcversion" to "fastlane/plugin/xcversion"
+          FastlaneRequire.install_gem_if_needed(gem_name: gem_name, require_gem: true)
+
           store_plugin_reference(gem_name)
           loaded_plugins = true
         rescue => ex

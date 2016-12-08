@@ -33,7 +33,6 @@ module Gym
 
         options = []
         options += project_path_array
-        options << "-configuration '#{config[:configuration]}'" if config[:configuration]
         options << "-sdk '#{config[:sdk]}'" if config[:sdk]
         options << "-toolchain '#{config[:toolchain]}'" if config[:toolchain]
         options << "-destination '#{config[:destination]}'" if config[:destination]
@@ -51,7 +50,8 @@ module Gym
 
         actions = []
         actions << :clean if config[:clean]
-        actions << :archive
+        actions << :archive unless Gym.project.library? || Gym.project.framework?
+        actions << :build if Gym.project.library? || Gym.project.framework?
 
         actions
       end
