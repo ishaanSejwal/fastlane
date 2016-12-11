@@ -33,9 +33,11 @@ module Match
       # Provisioning Profiles
       app_identifiers.each do |app_identifier|
         loop do
-          break if fetch_provisioning_profile(params: params,
+          uuid = fetch_provisioning_profile(params: params,
                                       certificate_id: cert_id,
                                       app_identifier: app_identifier)
+          params[:match_uuid] = uuid
+          break if !uuid.nil?
         end
       end
 
