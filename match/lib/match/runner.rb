@@ -36,7 +36,7 @@ module Match
           uuid = fetch_provisioning_profile(params: params,
                                       certificate_id: cert_id,
                                       app_identifier: app_identifier)
-          params[:match_uuid] = uuid
+          ENV["MATCH_UUID"] = uuid
           UI.message("found uuid is '#{uuid}'")
           break if !uuid.nil?
         end
