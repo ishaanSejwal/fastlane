@@ -13,6 +13,7 @@ module Fastlane
 
           params.load_configuration_file("Matchfile")
           matchParams = Match::Runner.new.run(params)
+          UI.message("found match_uuid is '#{matchParams[:match_uuid]}'")
           Actions.lane_context[SharedValues::MATCH_UUID] = matchParams[:match_uuid]
 
           define_profile_type(params)
