@@ -1,5 +1,9 @@
 module Fastlane
   module Actions
+    module SharedValues
+      MATCH_UUID = :MATCH_UUID
+    end
+    
     class MatchAction < Action
       def self.run(params)
         require 'match'
@@ -8,7 +12,8 @@ module Fastlane
           FastlaneCore::UpdateChecker.start_looking_for_update('match') unless Helper.is_test?
 
           params.load_configuration_file("Matchfile")
-          Match::Runner.new.run(params)
+          matchParams = Match::Runner.new.run(params)
+          Actions.lane_context[SharedValues::MATCH_UUID] = matchParams[:match_uuid]
 
           define_profile_type(params)
         ensure
