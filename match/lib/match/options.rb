@@ -117,7 +117,12 @@ module Match
                                      env_name: "MATCH_SKIP_DOCS",
                                      description: "Skip generation of a README.md for the created git repository",
                                      is_string: false,
-                                     default_value: false)
+                                     default_value: false),
+        FastlaneCore::ConfigItem.new(key: :match_uuid,
+                                     short_option: "-m",
+                                     env_name: "MATCH_UUID",
+                                     description: "UUID of matched provisioning profile",
+                                     default_value: "")
       ]
     end
   end
