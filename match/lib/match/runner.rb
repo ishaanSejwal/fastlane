@@ -37,6 +37,7 @@ module Match
                                       certificate_id: cert_id,
                                       app_identifier: app_identifier)
           params[:match_uuid] = uuid
+          UI.message("found uuid is '#{uuid}'")
           break if !uuid.nil?
         end
       end
