@@ -33,9 +33,12 @@ module Match
       # Provisioning Profiles
       app_identifiers.each do |app_identifier|
         loop do
-          break if fetch_provisioning_profile(params: params,
+          uuid = fetch_provisioning_profile(params: params,
                                       certificate_id: cert_id,
                                       app_identifier: app_identifier)
+          ENV["MATCH_UUID"] = uuid
+          UI.message("found uuid is '#{uuid}'")
+          break if !uuid.nil?
         end
       end
 
@@ -79,12 +82,16 @@ module Match
         if FastlaneCore::CertChecker.installed?(cert_path)
           UI.verbose "Certificate '#{File.basename(cert_path)}' is already installed on this machine"
         else
-          Utils.import(cert_path, params[:keychain_name])
+          Utils.import(cert_path, params[:keychain_name], password: params[:keychain_password])
         end
 
         # Import the private key
         # there seems to be no good way to check if it's already installed - so just install it
-        Utils.import(keys.last, params[:keychain_name])
+        Utils.import(keys.last, params[:keychain_name], password: params[:keychain_password])
+
+        # Get and print info of certificate
+        info = Utils.get_cert_info(cert_path)
+        TablePrinter.print_certificate_info(cert_info: info)
       end
 
       return File.basename(cert_path).gsub(".cer", "") # Certificate ID
