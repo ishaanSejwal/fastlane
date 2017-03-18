@@ -48,12 +48,6 @@ module Spaceship
       )
 
       class << self
-        # Create a new object based on a hash.
-        # This is used to create a new object based on the server response.
-        def factory(attrs)
-          return self.new(attrs)
-        end
-
         # @return (Array) Returns all apps available for this account
         def all
           client.applications.map { |application| self.factory(application) }
@@ -63,7 +57,7 @@ module Spaceship
         #   as either the App ID or the bundle identifier
         def find(identifier, mac: false)
           all.find do |app|
-            (app.apple_id == identifier.to_s || app.bundle_id == identifier) &&
+            ((app.apple_id && app.apple_id.casecmp(identifier.to_s) == 0) || (app.bundle_id && app.bundle_id.casecmp(identifier.to_s) == 0)) &&
               app.version_sets.any? { |v| (mac ? ["osx"] : ["ios", "appletvos"]).include?(v.platform) }
           end
         end
@@ -73,8 +67,8 @@ module Spaceship
         #   This can't be longer than 255 characters.
         # @param primary_language (String): If localized app information isn't available in an
         #   App Store territory, the information from your primary language will be used instead.
-        # @param version (String): The version number is shown on the App Store and should
-        #   match the one you used in Xcode.
+        # @param version *DEPRECATED: Use `ensure_version!` method instead*
+        #   (String): The version number is shown on the App Store and should match the one you used in Xcode.
         # @param sku (String): A unique ID for your app that is not visible on the App Store.
         # @param bundle_id (String): The bundle ID must match the one you used in Xcode. It
         #   can't be changed after you submit your first build.
@@ -84,9 +78,9 @@ module Spaceship
         #  should it be an ios or an osx app
 
         def create!(name: nil, primary_language: nil, version: nil, sku: nil, bundle_id: nil, bundle_id_suffix: nil, company_name: nil, platform: nil)
+          UI.deprecated("The `version` parameter is deprecated. Use `ensure_version!` method instead") if version
           client.create_application!(name: name,
                          primary_language: primary_language,
-                                  version: version,
                                       sku: sku,
                                 bundle_id: bundle_id,
                                 bundle_id_suffix: bundle_id_suffix,
@@ -237,6 +231,26 @@ module Spaceship
       # The current price tier
       def price_tier
         client.price_tier(self.apple_id)
+      end
+
+      # set the availability. This method doesn't require `save` to be called
+      def update_availability!(availability)
+        client.update_availability!(self.apple_id, availability)
+      end
+
+      # The current availability.
+      def availability
+        client.availability(self.apple_id)
+      end
+
+      #####################################################
+      # @!group in_app_purchases
+      #####################################################
+      # Get base In-App-Purchases object
+      def in_app_purchases
+        attrs = {}
+        attrs[:application] = self
+        Tunes::IAP.factory(attrs)
       end
 
       #####################################################

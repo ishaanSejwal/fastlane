@@ -74,12 +74,6 @@ module Spaceship
           raise "You have to use a subclass: Internal or External"
         end
 
-        # Create a new object based on a hash.
-        # This is used to create a new object based on the server response.
-        def factory(attrs)
-          self.new(attrs)
-        end
-
         # @return (Array) Returns all beta testers available for this account
         def all
           client.testers(self).map { |tester| self.factory(tester) }
@@ -104,7 +98,7 @@ module Spaceship
         # @param last_name (String) (optional): The last name of the new tester
         # @param groups (Array) (option): Names/IDs of existing groups for the new tester
         # @example
-        #   Spaceship::Tunes::Tester.external.create!(email: "tester@mathiascarignani.com", first_name: "Cary", last_name:"Bennett", groups:["Testers"])
+        #   Spaceship::Tunes::Tester.external.create!(email: "tester@mathiascarignani.com", first_name: "Cary", last_name: "Bennett", groups: ["Testers"])
         # @return (Tester): The newly created tester
         def create!(email: nil, first_name: nil, last_name: nil, groups: nil)
           data = client.create_tester!(tester: self,

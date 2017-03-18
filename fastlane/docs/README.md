@@ -1,3 +1,10 @@
+-----
+
+<h4 align="center">For fastlane guides, check out the new <a href="https://docs.fastlane.tools">docs.fastlane.tools</a> page</h4>
+
+-----
+
+
 # Documentation
 
 - [fastlane guide](https://github.com/fastlane/fastlane/blob/master/fastlane/docs/Guide.md) to get started. 
@@ -23,6 +30,12 @@
 - [Jenkins.md](https://github.com/fastlane/fastlane/blob/master/fastlane/docs/Jenkins.md) for Jenkins specific help
 - [Circle.md](https://github.com/fastlane/fastlane/blob/master/fastlane/docs/Circle.md) for Circle CI specific help
 - [Bamboo.md](https://github.com/fastlane/fastlane/blob/master/fastlane/docs/Bamboo.md) for Bamboo specific help
+
+-----
+
+<h4 align="center">For fastlane guides, check out the new <a href="https://docs.fastlane.tools">docs.fastlane.tools</a> page</h4>
+
+-----
 
 ## Fastfile
 
@@ -67,12 +80,14 @@ end
 ### `error` block
 
 This block will get executed when an error occurs, in any of the blocks (*before_all*, the lane itself or *after_all*).
+You can get more information about the error using the `error_info` property.
 
 ```ruby
 error do |lane, exception|
   slack(
     message: "Something went wrong with the deployment.",
-    success: false
+    success: false,
+    payload: { "Error Info" => exception.error_info.to_s } 
   )
 end
 ```

@@ -71,14 +71,8 @@ module FastlaneCore
 
         device_uuids = []
         result = Plist.parse_xml(usb_devices_output)
-        result[0]['_items'].each do |host_controller| # loop just incase the host system has more then 1 controller
-          host_controller['_items'].each do |usb_device|
-            is_supported_device = device_types.any? { |device_type| usb_device['_name'] == device_type }
-            if is_supported_device && usb_device['serial_num'].length == 40
-              device_uuids.push(usb_device['serial_num'])
-            end
-          end
-        end
+
+        discover_devices(result[0], device_types, device_uuids) if result[0]
 
         if device_uuids.count > 0 # instruments takes a little while to return so skip it if we have no devices
           instruments_devices_output = ''
@@ -98,6 +92,21 @@ module FastlaneCore
         end
 
         return devices
+      end
+
+      # Recursively handle all USB items, discovering devices that match the
+      # desired types.
+      def discover_devices(usb_item, device_types, discovered_device_udids)
+        (usb_item['_items'] || []).each do |child_item|
+          discover_devices(child_item, device_types, discovered_device_udids)
+        end
+
+        is_supported_device = device_types.any? { |device_type| usb_item['_name'] == device_type }
+        has_serial_number = (usb_item['serial_num'] || '').length == 40
+
+        if is_supported_device && has_serial_number
+          discovered_device_udids << usb_item['serial_num']
+        end
       end
 
       # The code below works from Xcode 7 on
@@ -208,7 +217,53 @@ module FastlaneCore
 
         UI.verbose "Launching #{simulator_path} for device: #{device.name} (#{device.udid})"
 
-        Helper.backticks("open -a #{simulator_path} --args -CurrentDeviceUDID #{device.udid}", print: $verbose)
+        Helper.backticks("open -a #{simulator_path} --args -CurrentDeviceUDID #{device.udid}", print: FastlaneCore::Globals.verbose?)
+      end
+
+      def copy_logs(device, log_identity, logs_destination_dir)
+        logs_destination_dir = File.expand_path(logs_destination_dir)
+        os_version = FastlaneCore::CommandExecutor.execute(command: 'sw_vers -productVersion', print_all: false, print_command: false)
+
+        host_computer_supports_logarchives = Gem::Version.new(os_version) >= Gem::Version.new('10.12.0')
+        device_supports_logarchives = Gem::Version.new(device.os_version) >= Gem::Version.new('10.0')
+
+        are_logarchives_supported = device_supports_logarchives && host_computer_supports_logarchives
+        if are_logarchives_supported
+          copy_logarchive(device, log_identity, logs_destination_dir)
+        else
+          copy_logfile(device, log_identity, logs_destination_dir)
+        end
+      end
+
+      private
+
+      def copy_logfile(device, log_identity, logs_destination_dir)
+        logfile_src = File.expand_path("~/Library/Logs/CoreSimulator/#{device.udid}/system.log")
+        return unless File.exist?(logfile_src)
+
+        FileUtils.mkdir_p(logs_destination_dir)
+        logfile_dst = File.join(logs_destination_dir, "system-#{log_identity}.log")
+
+        FileUtils.rm_f(logfile_dst)
+        FileUtils.cp(logfile_src, logfile_dst)
+        UI.success "Copying file '#{logfile_src}' to '#{logfile_dst}'..."
+      end
+
+      def copy_logarchive(device, log_identity, logs_destination_dir)
+        sim_resource_dir = FastlaneCore::CommandExecutor.execute(command: "xcrun simctl getenv #{device.udid} SIMULATOR_SHARED_RESOURCES_DIRECTORY 2>/dev/null", print_all: false, print_command: true)
+        logarchive_src = File.join(sim_resource_dir, "system_logs.logarchive")
+        logarchive_dst = File.join(logs_destination_dir, "system_logs-#{log_identity}.logarchive")
+
+        # if logarchive already exists it fails as the .logarchive is a directory, so delete it. to be sure its gone
+        FileUtils.rm_rf(logarchive_src)
+        FileUtils.rm_rf(logarchive_dst)
+
+        command = "xcrun simctl spawn #{device.udid} log collect 2>/dev/null"
+        FastlaneCore::CommandExecutor.execute(command: command, print_all: false, print_command: true)
+
+        FileUtils.mkdir_p(logarchive_dst)
+        FileUtils.cp_r("#{logarchive_src}/.", logarchive_dst)
+        UI.success "Copying file '#{logarchive_src}' to '#{logarchive_dst}'..."
       end
     end
   end

@@ -13,7 +13,12 @@ module Fastlane
       rows = []
       all_actions(platform) do |action, name|
         current = []
-        current << name.yellow
+
+        if Fastlane::Actions.is_deprecated?(action)
+          current << "#{name} (DEPRECATED)".deprecated
+        else
+          current << name.yellow
+        end
 
         if action < Action
           current << action.description if action.description
@@ -55,6 +60,13 @@ module Fastlane
         print_options(action, filter)
         print_output_variables(action, filter)
         print_return_value(action, filter)
+
+        if Fastlane::Actions.is_deprecated?(action)
+          puts "==========================================".deprecated
+          puts "This action (#{filter}) is deprecated".deprecated
+          puts action.deprecated_notes.to_s.deprecated if action.deprecated_notes
+          puts "==========================================\n".deprecated
+        end
 
         puts "More information can be found on https://docs.fastlane.tools/actions"
         puts ""
@@ -126,7 +138,7 @@ module Fastlane
 
     # Iterates through all available actions and yields from there
     def self.all_actions(platform = nil)
-      action_symbols = Fastlane::Actions.constants.select { |c| Fastlane::Actions.const_get(c).kind_of? Class }
+      action_symbols = Fastlane::Actions.constants.select { |c| Fastlane::Actions.const_get(c).kind_of?(Class) && c != :TestSampleCodeAction }
       action_symbols.sort.each do |symbol|
         action = Fastlane::Actions.const_get(symbol)
 

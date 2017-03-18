@@ -2,12 +2,27 @@
 Style/ClassCheck:
   EnforcedStyle: kind_of?
 
+Style/FrozenStringLiteralComment:
+  Enabled: false
+
+# This doesn't work with older versions of Ruby (pre 2.4.0)
+Style/SafeNavigation:
+  Enabled: false
+
+# This doesn't work with older versions of Ruby (pre 2.4.0)
+Performance/RegexpMatch:
+  Enabled: false
+
 # .length == 0 is also good, we don't always want .zero?
 Style/NumericPredicate:
   Enabled: false
 
 # this would cause errors with long lanes
 Metrics/BlockLength:
+  Enabled: false
+  
+# this is a bit buggy
+Metrics/ModuleLength:
   Enabled: false
 
 # certificate_1 is an okay variable name
@@ -36,6 +51,10 @@ Style/NumericLiteralPrefix:
 # command = !clean_expired.nil? || !clean_pattern.nil? ? CLEANUP : LIST
 # 
 Style/TernaryParentheses:
+  Enabled: false
+
+# sometimes it is usefull to have those empty methods
+Style/EmptyMethod:
   Enabled: false
 
 # It's better to be more explicit about the type

@@ -6,6 +6,7 @@ module Deliver
     def self.available_options
       user = CredentialsManager::AppfileConfig.try_fetch_value(:itunes_connect_id)
       user ||= CredentialsManager::AppfileConfig.try_fetch_value(:apple_id)
+      user ||= ENV["DELIVER_USER"]
 
       [
         FastlaneCore::ConfigItem.new(key: :username,
@@ -24,6 +25,13 @@ module Deliver
                                      env_name: "DELIVER_APP_ID",
                                      description: "The app ID of the app you want to use/modify",
                                      is_string: false), # don't add any verification here, as it's used to store a spaceship ref
+        FastlaneCore::ConfigItem.new(key: :edit_live,
+                                     short_option: "-o",
+                                     optional: true,
+                                     default_value: false,
+                                     env_name: "DELIVER_EDIT_LIVE",
+                                     description: "Modify live metadata, this option disables ipa upload and screenshot upload",
+                                     is_string: false),
         FastlaneCore::ConfigItem.new(key: :ipa,
                                      short_option: "-i",
                                      optional: true,
@@ -119,7 +127,7 @@ module Deliver
                                      optional: true,
                                      verify_block: proc do |value|
                                        UI.user_error!("Could not find config file at path '#{File.expand_path(value)}'") unless File.exist?(value)
-                                       UI.user_error!("'#{value}' doesn't seem to be a JSON file") unless value.end_with?(".json")
+                                       UI.user_error! "'#{value}' doesn't seem to be a JSON file" unless FastlaneCore::Helper.json_file?(File.expand_path(value))
                                      end),
         FastlaneCore::ConfigItem.new(key: :submission_information,
                                      short_option: "-b",
@@ -182,7 +190,7 @@ module Deliver
                                      short_option: "-l",
                                      verify_block: proc do |value|
                                        UI.user_error!("Could not find png file at path '#{File.expand_path(value)}'") unless File.exist?(value)
-                                       UI.user_error!("'#{value}' doesn't seem to be a png file") unless value.end_with?(".png")
+                                       UI.user_error!("'#{value}' doesn't seem to be one of the supported files. supported: #{Deliver::UploadAssets::SUPPORTED_ICON_EXTENSIONS.join(',')}") unless Deliver::UploadAssets::SUPPORTED_ICON_EXTENSIONS.include?(File.extname(value).downcase)
                                      end),
         FastlaneCore::ConfigItem.new(key: :apple_watch_app_icon,
                                      description: "Metadata: The path to the Apple Watch app icon",
@@ -190,7 +198,7 @@ module Deliver
                                      short_option: "-q",
                                      verify_block: proc do |value|
                                        UI.user_error!("Could not find png file at path '#{File.expand_path(value)}'") unless File.exist?(value)
-                                       UI.user_error!("'#{value}' doesn't seem to be a png file") unless value.end_with?(".png")
+                                       UI.user_error!("'#{value}' doesn't seem to be one of the supported files. supported: #{Deliver::UploadAssets::SUPPORTED_ICON_EXTENSIONS.join(',')}") unless Deliver::UploadAssets::SUPPORTED_ICON_EXTENSIONS.include?(File.extname(value).downcase)
                                      end),
         FastlaneCore::ConfigItem.new(key: :copyright,
                                      description: "Metadata: The copyright notice",

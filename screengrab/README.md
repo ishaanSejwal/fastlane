@@ -20,6 +20,7 @@
   <a href="https://github.com/fastlane/fastlane/tree/master/scan">scan</a> &bull;
   <a href="https://github.com/fastlane/fastlane/tree/master/match">match</a>
 </p>
+
 -------
 
 <p align="center">
@@ -31,7 +32,7 @@ screengrab
 
 [![Twitter: @FastlaneTools](https://img.shields.io/badge/contact-@FastlaneTools-blue.svg?style=flat)](https://twitter.com/FastlaneTools)
 [![License](https://img.shields.io/badge/license-MIT-green.svg?style=flat)](https://github.com/fastlane/fastlane/blob/master/screengrab/LICENSE)
-[![Gem](https://img.shields.io/gem/v/screengrab.svg?style=flat)](http://rubygems.org/gems/screengrab)
+[![Gem](https://img.shields.io/gem/v/screengrab.svg?style=flat)](https://rubygems.org/gems/screengrab)
 
 ###### Automated localized screenshots of your Android app on every device
 
@@ -58,7 +59,7 @@ sudo gem install fastlane
 androidTestCompile 'tools.fastlane:screengrab:x.x.x'
 ```
 
-The latest version can be determined by visiting the [screengrab RubyGems page](https://rubygems.org/gems/screengrab)
+The latest version is [ ![Download](https://api.bintray.com/packages/fastlane/fastlane/screengrab/images/download.svg) ](https://bintray.com/fastlane/fastlane/screengrab/_latestVersion)
 
 ##### Configuring your Manifest Permissions
 Ensure that the following permissions exist in your **src/debug/AndroidManifest.xml**
@@ -175,7 +176,7 @@ If you're having trouble getting your device unlocked and the screen activated t
 
 You can find all the tools on [fastlane.tools](https://fastlane.tools).
 
-##### [Like this tool? Be the first to know about updates and new fastlane tools](https://tinyletter.com/krausefx)
+##### [Do you like fastlane? Be the first to know about updates and new fastlane tools](https://tinyletter.com/fastlane-tools)
 
 # Need help?
 Please submit an issue on GitHub and provide information about your setup.

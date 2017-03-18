@@ -37,10 +37,16 @@ module Commander
         collector.did_launch_action(@program[:name])
         run_active_command
       rescue InvalidCommandError => e
-        abort "#{e}. Use --help for more information"
+        # calling `abort` makes it likely that tests stop without failing, so
+        # we'll disable that during tests.
+        if FastlaneCore::Helper.test?
+          raise e
+        else
+          abort "#{e}. Use --help for more information"
+        end
       rescue Interrupt => ex
         # We catch it so that the stack trace is hidden by default when using ctrl + c
-        if $verbose
+        if FastlaneCore::Globals.verbose?
           raise ex
         else
           puts "\nCancelled... use --verbose to show the stack trace"
@@ -49,7 +55,13 @@ module Commander
         OptionParser::InvalidOption,
         OptionParser::InvalidArgument,
         OptionParser::MissingArgument => e
-        abort e.to_s
+        # calling `abort` makes it likely that tests stop without failing, so
+        # we'll disable that during tests.
+        if FastlaneCore::Helper.test?
+          raise e
+        else
+          abort e.to_s
+        end
       rescue FastlaneCore::Interface::FastlaneError => e # user_error!
         collector.did_raise_error(@program[:name])
         show_github_issues(e.message) if e.show_github_issues
@@ -140,16 +152,17 @@ module Commander
       # use a bit of Ruby duck-typing to check whether the unknown exception type implements the right
       # method. If so, we'll present any returned error info in the manner of a user_error!
       error_info = e.respond_to?(:preferred_error_info) ? e.preferred_error_info : nil
+      should_show_github_issues = e.respond_to?(:show_github_issues) ? e.show_github_issues : true
 
       if error_info
         error_info = error_info.join("\n\t") if error_info.kind_of?(Array)
 
-        show_github_issues(error_info)
+        show_github_issues(error_info) if should_show_github_issues
 
         display_user_error!(e, error_info)
       else
         # Pass the error instead of a message so that the inspector can do extra work to simplify the query
-        show_github_issues(e)
+        show_github_issues(e) if should_show_github_issues
 
         # From https://stackoverflow.com/a/4789702/445598
         # We do this to make the actual error message red and therefore more visible
@@ -158,10 +171,12 @@ module Commander
     end
 
     def display_user_error!(e, message)
-      if $verbose # with stack trace
+      if FastlaneCore::Globals.verbose?
+        # with stack trace
         reraise_formatted!(e, message)
       else
-        abort "\n[!] #{message}".red # without stack trace
+        # without stack trace
+        abort "\n[!] #{message}".red
       end
     end
 
@@ -176,7 +191,7 @@ module Commander
       require 'gh_inspector'
       require 'fastlane_core/ui/github_issue_inspector_reporter'
 
-      inspector = GhInspector::Inspector.new("fastlane", "fastlane", verbose: $verbose)
+      inspector = GhInspector::Inspector.new("fastlane", "fastlane", verbose: FastlaneCore::Globals.verbose?)
       delegate = Fastlane::InspectorReporter.new
       if message_or_error.kind_of?(String)
         inspector.search_query(message_or_error, delegate)
@@ -184,7 +199,7 @@ module Commander
         inspector.search_exception(message_or_error, delegate)
       end
     rescue => ex
-      FastlaneCore::UI.error("Error finding relevant GitHub issues: #{ex}") if $verbose
+      FastlaneCore::UI.error("Error finding relevant GitHub issues: #{ex}") if FastlaneCore::Globals.verbose?
     end
   end
 end
